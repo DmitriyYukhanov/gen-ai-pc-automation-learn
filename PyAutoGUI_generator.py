@@ -4,6 +4,7 @@ import sys
 import json
 import pyautogui
 import os
+import subprocess
 
 load_dotenv()
 
