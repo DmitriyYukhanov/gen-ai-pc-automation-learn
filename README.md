@@ -1,5 +1,5 @@
-# Generative AI PC Automation examples
-A few examples of how to automate pc with generative ai.
+# Generative AI PC Automation example
+A simple example of how to automate pc with generative ai.
 
 ## PyAutoGUI_generator.py
 This script uses OpenAI's GPT-4o model to generate PyAutoGUI code based on user prompts.  
