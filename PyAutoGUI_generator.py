@@ -18,29 +18,34 @@ def call_openai_api(user_prompt):
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a skilled Python developer."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return response.choices[0].message.content
+                {"role": "system", "content": "You are a skilled Python developer. Return valid Python code as JSON that can be executed."},
+                {"role": "user", "content": f"Return the following as JSON: {prompt}"}
+            ],
+            response_format={ "type": "json_object" },
+            functions=[{
+                "name": "provide_code",
+                "description": "Provide PyAutoGUI code",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string",
+                            "description": "The Python code to execute"
+                            }
+                        },
+                        "required": ["code"]
+                    }
+                }],
+            function_call={"name": "provide_code"})
+        return json.loads(response.choices[0].message.function_call.arguments)["code"]
     except Exception as e:
         print(f"Error calling OpenAI API: {e}")
-        return None
-
-def extract_code_from_response(response):
-    try:
-        # Assuming the code block is enclosed in triple backticks
-        start = response.find("```python") + len("```python")
-        end = response.find("```", start)
-        return response[start:end].strip()
-    except Exception as e:
-        print(f"Error extracting code: {e}")
         return None
 
 def main():
     while True:
         # Step 1: Prompt user for input
-        print("v2 Enter your task prompt (e.g., 'use the calculator to multiply 2*3'): ")
+        print("Enter your task prompt (e.g., 'use the calculator to multiply 2*3'): ")
         user_prompt = input().strip()
 
         if not user_prompt:
@@ -49,29 +54,21 @@ def main():
 
         # Step 2: Call the OpenAI API
         print("Generating code...")
-        api_response = call_openai_api(user_prompt)
+        extracted_code = call_openai_api(user_prompt)
 
-        if not api_response:
+        if not extracted_code:
             print("Failed to generate a response. Please try again.")
             continue
 
-        # Step 3: Extract code block from API response
-        extracted_code = extract_code_from_response(api_response)
-
-        if not extracted_code:
-            print("Failed to extract code from response. Please try again.")
-            continue
-
-        # Step 4: Display the generated code
+        # Step 3: Display the generated code
         print("Here is the code generated for your prompt:")
         print(extracted_code)
 
-        # Step 5: Ask the user how to proceed
+        # Step 4: Ask the user how to proceed
         print("Would you like to execute this code (yes/no) or modify the prompt (modify)?")
         user_decision = input().strip().lower()
 
         if user_decision == "yes":
-            # Step 6.a: Execute the code
             try:
                 print("Executing the code...")
                 exec(extracted_code)
@@ -81,7 +78,6 @@ def main():
                 print(f"Error during execution: {e}")
                 print("Returning to prompt for correction.")
         elif user_decision == "modify":
-            # Step 6.b: Modify the prompt
             print("Enter a new task prompt.")
             continue
         elif user_decision == "no":
