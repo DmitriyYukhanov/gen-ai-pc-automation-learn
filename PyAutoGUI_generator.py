@@ -43,28 +43,26 @@ def call_openai_api(user_prompt):
         return None
 
 def main():
+    last_error = None
     while True:
-        # Step 1: Prompt user for input
         print("Enter your task prompt (e.g., 'use the calculator to multiply 2*3'): ")
-        user_prompt = input().strip()
-
+        user_prompt = input().strip() if not last_error else f"{user_prompt} (Previous attempt failed with error: {last_error})"
+        
         if not user_prompt:
             print("Invalid input. Please provide a task prompt.")
             continue
 
-        # Step 2: Call the OpenAI API
         print("Generating code...")
         extracted_code = call_openai_api(user_prompt)
+        last_error = None
 
         if not extracted_code:
             print("Failed to generate a response. Please try again.")
             continue
 
-        # Step 3: Display the generated code
         print("Here is the code generated for your prompt:")
         print(extracted_code)
 
-        # Step 4: Ask the user how to proceed
         print("Would you like to execute this code (yes/no) or modify the prompt (modify)?")
         user_decision = input().strip().lower()
 
@@ -76,7 +74,9 @@ def main():
                 break
             except Exception as e:
                 print(f"Error during execution: {e}")
-                print("Returning to prompt for correction.")
+                print("Retrying with error information...")
+                last_error = str(e)
+                continue
         elif user_decision == "modify":
             print("Enter a new task prompt.")
             continue
