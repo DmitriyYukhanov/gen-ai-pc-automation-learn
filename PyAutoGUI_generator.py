@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 from dotenv import load_dotenv
 import sys
 import json
@@ -55,6 +55,12 @@ def call_openai_api(user_prompt, previous_code=None, error_info=None):
                 }],
             function_call={"name": "provide_code"})
         return json.loads(response.choices[0].message.function_call.arguments)["code"]
+    except OpenAIError as e:  # Catch specific OpenAI exceptions
+        print(f"OpenAI API Error: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+        return None
     except Exception as e:
         print(f"Error calling OpenAI API: {e}")
         return None
