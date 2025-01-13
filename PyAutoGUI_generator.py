@@ -30,7 +30,9 @@ def call_openai_api(user_prompt, previous_code=None, error_info=None):
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a skilled Python developer. Return valid Python code as JSON that can be executed."},
+                {"role": "system", "content": """You are a skilled Python developer and automation expert. 
+                 Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
+                 Never assume, use code or web search to get actual data."""},
                 {"role": "user", "content": f"Return the following as JSON: {prompt}"}
             ],
             response_format={ "type": "json_object" },
@@ -57,7 +59,7 @@ def call_openai_api(user_prompt, previous_code=None, error_info=None):
 def main():
     while True:
         retry_count = 0
-        print("Enter your task prompt (e.g., 'use the calculator to multiply 2*3'): ")
+        print("Enter your task prompt (e.g., 'use the calculator to increase current year by 10 and print the result to terminal'): ")
         user_prompt = input().strip()
         
         if not user_prompt:
@@ -76,13 +78,13 @@ def main():
             print("Here is the code generated for your prompt:")
             print(extracted_code)
 
-            print("Would you like to execute this code (yes/no) or modify the prompt (modify)?")
+            print("Would you like to execute this code (yes(y) / no(n)) or modify the prompt (modify(m))?")
             user_decision = input().strip().lower()
 
-            if user_decision == "yes":
+            if user_decision == "yes" or user_decision == "y":
                 try:
                     print("Executing the code...")
-                    exec(extracted_code)
+                    exec(extracted_code, globals())
                     print("Execution complete.")
                     return
                 except Exception as e:
@@ -95,14 +97,14 @@ def main():
                     else:
                         print("Maximum retry attempts reached. Please try a different prompt.")
                         break
-            elif user_decision == "modify":
+            elif user_decision == "modify" or user_decision == "m":
                 print("Enter a new task prompt.")
-                continue
-            elif user_decision == "no":
-                print("Terminating program. Goodbye!")
                 break
+            elif user_decision == "no" or user_decision == "n":
+                print("Terminating program. Goodbye!")
+                sys.exit() 
             else:
-                print("Invalid input. Please enter 'yes', 'no', or 'modify'.")
+                print("Invalid input. Please enter 'yes(y)', 'no(n)', or 'modify(m)'.")
 
 if __name__ == "__main__":
     main()
