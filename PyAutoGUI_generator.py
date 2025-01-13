@@ -6,6 +6,9 @@ import pyautogui
 import os
 import subprocess
 
+MAX_RETRY_ATTEMPTS = 5
+MODEL_NAME = "gpt-4o"
+
 load_dotenv()
 
 client = OpenAI(
@@ -28,7 +31,7 @@ def call_openai_api(user_prompt, previous_code=None, error_info=None):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": """You are a skilled Python developer and automation expert. 
                  Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
@@ -69,7 +72,7 @@ def main():
         print("Generating code...")
         extracted_code = call_openai_api(user_prompt)
 
-        while retry_count < 5:
+        while retry_count < MAX_RETRY_ATTEMPTS:
 
             if not extracted_code:
                 print("Failed to generate a response. Please try again.")
@@ -78,7 +81,7 @@ def main():
             print("Here is the code generated for your prompt:")
             print(extracted_code)
 
-            print("Would you like to execute this code (yes(y) / no(n)) or modify the prompt (modify(m))?")
+            print("Would you like to execute this code (yes(y) / no(n)), modify the prompt (modify(m)), or retry with same prompt (retry(r))?")
             user_decision = input().strip().lower()
 
             if user_decision == "yes" or user_decision == "y":
@@ -100,11 +103,16 @@ def main():
             elif user_decision == "modify" or user_decision == "m":
                 print("Enter a new task prompt.")
                 break
+            elif user_decision == "retry" or user_decision == "r":
+                print("Regenerating code with the same prompt...")
+                retry_count = 0  # Reset retry count for the new attempt
+                extracted_code = call_openai_api(user_prompt)
+                continue
             elif user_decision == "no" or user_decision == "n":
                 print("Terminating program. Goodbye!")
-                sys.exit() 
+                sys.exit()
             else:
-                print("Invalid input. Please enter 'yes(y)', 'no(n)', or 'modify(m)'.")
+                print("Invalid input. Please enter 'yes(y)', 'no(n)', 'modify(m)', or 'retry(r)'.")
 
 if __name__ == "__main__":
     main()
