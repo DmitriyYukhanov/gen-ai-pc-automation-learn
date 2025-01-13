@@ -8,6 +8,23 @@ import subprocess
 
 MAX_RETRY_ATTEMPTS = 5
 MODEL_NAME = "gpt-4o"
+SYSTEM_PROMPT = """You are a skilled Python developer and automation expert. 
+                   Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
+                   Never assume, use code or web search to get actual data."""
+API_FUNCTION_SCHEMA = {
+    "name": "provide_code",
+    "description": "Provide PyAutoGUI code",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "code": {
+                "type": "string",
+                "description": "The Python code to execute"
+            }
+        },
+        "required": ["code"]
+    }
+}
 
 load_dotenv()
 
@@ -33,36 +50,21 @@ def call_openai_api(user_prompt, previous_code=None, error_info=None):
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": """You are a skilled Python developer and automation expert. 
-                 Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
-                 Never assume, use code or web search to get actual data."""},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Return the following as JSON: {prompt}"}
             ],
             response_format={ "type": "json_object" },
-            functions=[{
-                "name": "provide_code",
-                "description": "Provide PyAutoGUI code",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string",
-                            "description": "The Python code to execute"
-                            }
-                        },
-                        "required": ["code"]
-                    }
-                }],
+            functions=[API_FUNCTION_SCHEMA],
             function_call={"name": "provide_code"})
         return json.loads(response.choices[0].message.function_call.arguments)["code"]
-    except OpenAIError as e:  # Catch specific OpenAI exceptions
+    except OpenAIError as e:
         print(f"OpenAI API Error: {e}")
         return None
     except json.JSONDecodeError as e:
         print(f"JSON parsing error: {e}")
         return None
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
+        print(f"Unexpected error: {e}")
         return None
 
 def main():
