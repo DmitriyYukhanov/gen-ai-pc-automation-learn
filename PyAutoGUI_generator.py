@@ -1,4 +1,4 @@
-from openai import OpenAI, OpenAIError
+from openai import OpenAIError, AsyncOpenAI
 from dotenv import load_dotenv
 from rich import print
 from rich.syntax import Syntax
@@ -34,7 +34,7 @@ class PyAutoGUIGenerator:
     def __init__(self):
         load_dotenv()
         self.console = Console()
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.retry_count = 0
 
     def display_code(self, code: str):
@@ -65,8 +65,7 @@ class PyAutoGUIGenerator:
             progress.add_task(description="Generating code...", total=None)
             
             try:
-                response = await asyncio.to_thread(
-                    self.client.chat.completions.create,
+                response = await self.client.chat.completions.create(
                     model=MODEL_NAME,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
@@ -179,7 +178,9 @@ def main():
     generator = PyAutoGUIGenerator()
     
     try:
-        asyncio.run(generator.run())
+        loop = asyncio.new_event_loop(); 
+        asyncio.set_event_loop(loop); 
+        loop.run_until_complete(generator.run())
     except KeyboardInterrupt:
         print("\nProgram terminated by user.")
     except Exception as e:
