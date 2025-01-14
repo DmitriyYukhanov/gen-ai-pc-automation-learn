@@ -1,14 +1,18 @@
 from openai import OpenAI, OpenAIError
 from dotenv import load_dotenv
+from rich import print
+from rich.syntax import Syntax
+from rich.console import Console
+from rich.panel import Panel
 import sys
 import json
 import os
 
 MAX_RETRY_ATTEMPTS = 5
 MODEL_NAME = "gpt-4o"
-SYSTEM_PROMPT = """You are a skilled Python developer and automation expert. 
-                   Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
-                   Never assume, use code or web search to get actual data."""
+SYSTEM_PROMPT = """Role: You are a skilled Python developer and automation expert.
+                   Task: Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
+                   Constraints: Never assume, use code or web search to get actual data such as dates, times, etc."""
 API_FUNCTION_SCHEMA = {
     "name": "provide_code",
     "description": "Provide PyAutoGUI code",
@@ -27,8 +31,14 @@ API_FUNCTION_SCHEMA = {
 class PyAutoGUIGenerator:
     def __init__(self):
         load_dotenv()
+        self.console = Console()
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         self.retry_count = 0
+
+    def display_code(self, code: str):
+        syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+        panel = Panel(syntax, title="Generated Code", border_style="blue")
+        self.console.print(panel)
 
     def generate_code(self, user_prompt, previous_code=None, error_info=None):
         if previous_code and error_info:
@@ -96,10 +106,9 @@ class PyAutoGUIGenerator:
                     print("Failed to generate a response. Please try again.")
                     break
 
-                print("Here is the code generated for your prompt:")
-                print(extracted_code)
+                self.display_code(extracted_code)
 
-                user_decision = UserInterface.get_user_decision()
+                user_decision = UserInterface.get_user_decision(self)
 
                 if user_decision == "execute":
                     try:
@@ -141,7 +150,7 @@ class UserInterface:
             print("Invalid input. Please provide a task prompt.")
 
     @staticmethod
-    def get_user_decision():
+    def get_user_decision(self):
         valid_responses = {
             ('yes', 'y'): 'execute',
             ('no', 'n'): 'exit',
@@ -149,7 +158,8 @@ class UserInterface:
             ('retry', 'r'): 'retry'
         }
         while True:
-            print("Would you like to execute this code (y / n), modify the prompt (m), or retry with same prompt (r)?")
+            self.console.print("""\nWould you like to execute this code (y / n), modify the prompt (m), or retry with same prompt (r)?
+[bold yellow]WARNING:[/bold yellow] execute code only after careful review to avoid unintended actions!""")
             response = input().strip().lower()
             for keys, value in valid_responses.items():
                 if response in keys:

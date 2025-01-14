@@ -12,7 +12,7 @@ It allows users to describe actions they want to automate on their computer, and
 ### Installation
 Install the required libraries:
 ```
-pip install openai pyautogui python-dotenv
+pip install openai pyautogui python-dotenv rich
 ```
 
 ### Usage
