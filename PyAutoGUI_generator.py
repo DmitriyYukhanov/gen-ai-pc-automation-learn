@@ -10,11 +10,15 @@ import json
 import os
 import asyncio
 
+TEMPERATURE = 1
 MAX_RETRY_ATTEMPTS = 5
 MODEL_NAME = "gpt-4o"
-SYSTEM_PROMPT = """Role: You are a skilled Python developer and automation expert.
-                   Task: Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
-                   Constraints: Never assume or hardcode dynamic data, use code or web search to get actual data such as dates, times, etc."""
+SYSTEM_PROMPT = """
+Context: You need to generate PyAutoGUI code to automate tasks on a computer. 
+Role: You are a skilled Python developer and automation expert.
+Task: Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
+Prefer using clipboard instead of OCR \ screenshots where possible. Don't expect user will do anything, you need to automate it all by yourself.
+Constraints: Never assume or hardcode dynamic data, use code or web search to get actual data such as dates, times, etc."""
 API_FUNCTION_SCHEMA = {
     "name": "provide_code",
     "description": "Provide PyAutoGUI code",
@@ -39,7 +43,7 @@ class PyAutoGUIGenerator:
 
     def display_code(self, code: str):
         syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
-        panel = Panel(syntax, title="Generated Code", border_style="blue")
+        panel = Panel(syntax, title="Generated Code", border_style="green")
         self.console.print(panel)
 
     async def generate_code(self, user_prompt, previous_code=None, error_info=None):
@@ -71,6 +75,7 @@ class PyAutoGUIGenerator:
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": f"Return the following as JSON: {prompt}"}
                     ],
+                    temperature=TEMPERATURE,
                     response_format={ "type": "json_object" },
                     functions=[API_FUNCTION_SCHEMA],
                     function_call={"name": "provide_code"}
