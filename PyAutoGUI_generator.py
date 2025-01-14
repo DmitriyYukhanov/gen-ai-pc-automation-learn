@@ -14,7 +14,7 @@ MAX_RETRY_ATTEMPTS = 5
 MODEL_NAME = "gpt-4o"
 SYSTEM_PROMPT = """Role: You are a skilled Python developer and automation expert.
                    Task: Return valid Python (PyAutoGUI) code as JSON that can be executed through the exec().
-                   Constraints: Never assume, use code or web search to get actual data such as dates, times, etc."""
+                   Constraints: Never assume or hardcode dynamic data, use code or web search to get actual data such as dates, times, etc."""
 API_FUNCTION_SCHEMA = {
     "name": "provide_code",
     "description": "Provide PyAutoGUI code",
@@ -152,7 +152,7 @@ class UserInterface:
     @staticmethod
     def get_user_prompt():
         while True:
-            print("Enter your task prompt (e.g., 'use the calculator to increase current year by 10 and print the result to terminal'): ")
+            print("Enter your task prompt (e.g., 'use the calculator to increase current year by 10 and print the result from calculator to console'): ")
             prompt = input().strip()
             if prompt:
                 return prompt

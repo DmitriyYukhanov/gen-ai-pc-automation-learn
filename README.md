@@ -16,7 +16,7 @@ pip install openai pyautogui python-dotenv rich
 ```
 
 ### Usage
-1. Put your OpenAI API key in the [.env file](https://pypi.org/project/python-dotenv/).
+1. Put your OpenAI API key in the [.env file](https://pypi.org/project/python-dotenv/) as `OPENAI_API_KEY=your_api_key`.
 2. Run the script.
 3. Enter your prompt when prompted.
 4. The script will generate the PyAutoGUI code and let you review it before executing.
